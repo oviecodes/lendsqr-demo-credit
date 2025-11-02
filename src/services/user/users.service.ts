@@ -5,13 +5,10 @@ import db from "../../connectors/knex.connector"
 import randomstring, { generate } from "randomstring"
 import createError from "http-errors"
 import { config } from "../../common/config"
-import S3Service from "../../connectors/s3.connector"
-import queue from "../../utils/queue"
 import { add, sub } from "date-fns"
 import argon2 from "argon2"
 // import { PDFKitUtils } from "../../utils/pdfkit.utils"
 import { Knex } from "knex"
-import s3Connector from "../../connectors/s3.connector"
 
 class UserService {
   async updateUser(userId: string, data: any) {
@@ -147,13 +144,6 @@ class UserService {
       })
 
       key = `profilePictures/${key}-${Date.now()}${ext}`
-      queue.add("image-upload", {
-        filePath: imageData.tempFilePath,
-        key,
-        userId: data.userId,
-        type: "profile-picture",
-        previousKey,
-      })
     }
   }
 

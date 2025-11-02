@@ -3,11 +3,9 @@ import dotenv from "dotenv"
 
 dotenv.config()
 
-console.log(process.env.DATABASE_PASSWORD)
-
 // Update with your config settings.
 
-const config: { [key: string]: Knex.Config } = {
+export const config: { [key: string]: Knex.Config } = {
   development: {
     client: "mysql2",
     debug: true,
@@ -36,5 +34,3 @@ const config: { [key: string]: Knex.Config } = {
     },
   },
 }
-
-module.exports = config

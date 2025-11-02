@@ -8,7 +8,6 @@ dotenv.config()
 import cors from "cors"
 import debug from "debug"
 import fileUpload from "express-fileupload"
-import compression from "compression"
 
 import logger from "./src/common/logger"
 import { CommonRoutesConfig } from "./src/common/common.routes.config"
@@ -32,9 +31,6 @@ app.use(
 
 app.use(cors())
 app.use(logger)
-// app.use(compression())
-
-app.use("/assets", express.static(path.join(process.cwd(), "assets")))
 
 app.use((req, res, next) => {
   // convert email to lowercase
@@ -47,21 +43,13 @@ const runningMessage = `Server running at http://localhost:${port}`
 app.get("/", (req: express.Request, res: express.Response, next) => {
   return res.status(200).json({
     status: true,
-    message: `${process.env.NODE_ENV}-RESIHUB API v1.0`,
+    message: `${process.env.NODE_ENV}-DEMO-CREDIT API v1.0`,
   })
 })
 
 app.use("/v1", router)
 
-//response encryption middleware -- after response
-// app.use((req, res, next) => {
-//   console.log("reaching after controllers")
-//   return res.status(200).json(res.locals.response)
-// })
-
 server.listen(port, () => {
-  // our only exception to avoiding console.log(), because we
-  // always want to know when the server is done starting up
   console.log(runningMessage)
 
   routes.forEach((route: CommonRoutesConfig) => {

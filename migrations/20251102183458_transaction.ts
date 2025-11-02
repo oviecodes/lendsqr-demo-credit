@@ -1,7 +1,7 @@
 import type { Knex } from "knex"
 
 export async function up(knex: Knex): Promise<void> {
-  return knex.schema.createTable("WalletTransaction", (table) => {
+  await knex.schema.createTable("WalletTransaction", (table) => {
     table.uuid("id").primary().unique()
     table.uuid("walletId").notNullable().index()
 
@@ -27,8 +27,19 @@ export async function up(knex: Knex): Promise<void> {
       .inTable("Wallet")
       .onDelete("CASCADE")
   })
+
+  await knex.raw(`
+    CREATE UNIQUE INDEX idx_wallet_transaction_idempotency 
+    ON \`WalletTransaction\` (\`walletId\`, \`referenceId\`, \`referenceType\`, \`type\`)
+  `)
 }
 
 export async function down(knex: Knex): Promise<void> {
+  await knex.schema.table("WalletTransaction", (table) => {
+    table.dropIndex(
+      ["walletId", "referenceId", "referenceType", "type"],
+      "idx_wallet_transaction_idempotency"
+    )
+  })
   return knex.schema.dropTableIfExists("WalletTransaction")
 }

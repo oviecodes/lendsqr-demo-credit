@@ -1,10 +1,8 @@
 import db from "../../connectors/knex.connector"
 import * as argon2 from "argon2"
-import { totp, hotp } from "otplib"
 import randomstring from "randomstring"
 import createError from "http-errors"
 import AuthConfig from "../../lib/authentication.lib"
-import sendEmail from "../../utils/nodemailer.utils"
 import { config } from "../../common/config"
 import constants from "../../constants"
 
@@ -35,15 +33,9 @@ class AuthService {
 
     if (!user) return
 
-    const { code, name }: any = await new AuthConfig(
-      constants.AUTH_TYPES.LOCAL
-    ).generateOTP(user.id, true)
-
-    sendEmail
-      .setReceiver(email)
-      .setEmailSenderName("Resihub")
-      .setSubject("Resend OTP")
-      .sendHtml("request-otp", { otp: code, type: "Resihub", name })
+    // const { code, name }: any = await new AuthConfig(
+    //   constants.AUTH_TYPES.LOCAL
+    // ).generateOTP(user.id, true)
   }
 
   async verifyOTP(data: { email: string; token: string }) {
@@ -54,15 +46,15 @@ class AuthService {
       .where("email", email)
       .select("id", "verified", "resihubUserId")
 
-    const isValid = await AuthConfig.validateOTP({
-      resourceId: id,
-      type: "local",
-      token,
-    })
+    // const isValid = await AuthConfig.validateOTP({
+    //   resourceId: id,
+    //   type: "local",
+    //   token,
+    // })
 
-    if (!isValid) {
-      throw createError[401]("Invalid token")
-    }
+    // if (!isValid) {
+    //   throw createError[401]("Invalid token")
+    // }
 
     await db
       .table("UserVerificationCode")

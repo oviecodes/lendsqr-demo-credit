@@ -7,8 +7,6 @@ const requiredEnvVars = [
   "ACCESS_TOKEN_SECRET",
   "REFRESH_TOKEN_SECRET",
   "AUTH_ISSUER_BASE_URL",
-  "OTPSECRET",
-  "ENCRYPTION_KEY",
 ] as const
 
 requiredEnvVars.forEach((envVar) => {

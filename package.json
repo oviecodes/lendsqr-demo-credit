@@ -8,7 +8,7 @@
     "debug": "export DEBUG=* && npm run start",
     "build": "tsc && npm run copy-templates",
     "watch": "tsc -w",
-    "dev": "export NODE_ENV=development && tsc-watch --onSuccess 'concurrently \"node dist/app.js\" \"node dist/socket.js\" \"node dist/src/utils/workers/main.js\"'",
+    "dev": "export NODE_ENV=development && tsc-watch --onSuccess 'concurrently \"node dist/app.js\"'",
     "seeds": "npx ts-node src/seeds/index.ts"
   },
   "keywords": [],
