@@ -1,10 +1,15 @@
 import type { Knex } from "knex"
+import dotenv from "dotenv"
+
+dotenv.config()
+
+console.log(process.env.DATABASE_PASSWORD)
 
 // Update with your config settings.
 
 const config: { [key: string]: Knex.Config } = {
   development: {
-    client: "mysql",
+    client: "mysql2",
     debug: true,
     connection: {
       database: process.env.DATABASE_NAME,
@@ -15,7 +20,7 @@ const config: { [key: string]: Knex.Config } = {
   },
 
   production: {
-    client: "mysql",
+    client: "mysql2",
     connection: {
       database: process.env.DATABASE_NAME,
       user: process.env.DATABASE_USER,
