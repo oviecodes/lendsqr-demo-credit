@@ -1,6 +1,6 @@
 import express, { Router } from "express"
 import { CommonRoutesConfig } from "../../common/common.routes.config"
-import user from "../../controllers/user"
+import { authController } from "../../controllers"
 import { validate } from "../../middleware/validator"
 import schema from "../../validators/user/auth.validator"
 import { authCheck } from "../../middleware/check"
@@ -24,43 +24,39 @@ class AuthRoutes extends CommonRoutesConfig {
         authCheck.checkAdminWardCode,
         authCheck.checkEmailExists,
       ],
-      user.authController.register
+      authController.register
     )
 
     this.router.post(
       "/verify",
       [validate(schema.verify)],
-      user.authController.validateOTP
+      authController.validateOTP
     )
 
-    this.router.post(
-      "/login",
-      [validate(schema.login)],
-      user.authController.login
-    )
+    this.router.post("/login", [validate(schema.login)], authController.login)
 
     this.router.post(
       "/verify-passkey",
       [validate(schema.passkey), authCheck.checkUserFomEmail],
-      user.authController.checkPassKey
+      authController.checkPassKey
     )
 
     this.router.post(
       "/refresh",
       [validate(schema.refresh)],
-      user.authController.refreshToken
+      authController.refreshToken
     )
 
     this.router.post(
       "/check-email",
       [validate(schema.checkEmail)],
-      user.authController.checkEmail
+      authController.checkEmail
     )
 
     this.router.post(
       "/get-otp",
       [validate(schema.checkEmail)],
-      user.authController.getOTP
+      authController.getOTP
     )
 
     return this.router
