@@ -1,0 +1,13 @@
+/node_modules
+/dist
+.env
+.git
+.npm
+.vscode
+docker-compose.dev.yml
+/test_secrets
+/report
+/data_export
+userData.txt
+firebase/
+prod_dump.sql

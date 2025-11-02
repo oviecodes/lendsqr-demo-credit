@@ -1,0 +1,48 @@
+version: "3.4"
+
+services:
+  api:
+    image: resihub
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    init: true
+    depends_on:
+      - db
+    ports:
+      - 3000:3000
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # Use postgres/example user/password credentials
+  db:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    # or set shared memory limit when deploy via swarm stack
+    #volumes:
+    #  - type: tmpfs
+    #    target: /dev/shm
+    #    tmpfs:
+    #      size: 134217728 # 128*2^20 bytes = 128Mb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      external: true
+      name: "${POSTGRES_PASSWORD}"
+    ports:
+      - 5432:5432
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+volumes:
+  pgdata:
+networks:
+  backend:

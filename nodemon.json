@@ -1,0 +1,6 @@
+{
+  "watch": ["src"],
+  "ext": "ts",
+  "exec": "node dist/index.js & node dist/socket.js",
+  "ignore": ["dist", "node_modules"]
+}
