@@ -29,35 +29,9 @@ class AuthConfig implements Auth {
   }
 
   async register(data: { email: string; password?: string }): Promise<any> {
-    // checkPostCode
-    // await this.checkPostCodeData()
-
-    const registrationDetails = await this.strategy.register({
+    await this.strategy.register({
       ...data,
     })
-
-    let { otp } = registrationDetails
-
-    delete registrationDetails.otp
-
-    if (!otp) return this.tokens(registrationDetails)
-
-    console.log(this.strategyType)
-
-    // otp = otp ? await this.generateOTP(registrationDetails.id) : null
-
-    //update message with templates
-    const template =
-      this.strategyType === "business"
-        ? "business-registration"
-        : "user-registration"
-
-    const senderName =
-      this.strategyType === "business" ? "Resihub Business" : "Resihub App"
-
-    const name = (data as any)?.firstName + " " + (data as any)?.lastName
-
-    return { otp: process.env.NODE_ENV !== "production" ? otp : null }
   }
 
   async login(data: { email: string; password?: string; newDevice?: boolean }) {
@@ -67,11 +41,6 @@ class AuthConfig implements Auth {
     delete resource.otp
 
     if (!otp) return this.tokens(resource)
-
-    // otp = otp ? await this.generateOTP(resource.id) : null
-
-    // send email depending on the strategy
-    // AuthConfig.sendEmail(this.strategyType as any, resource.email, otp, name)
 
     return { otp: process.env.NODE_ENV !== "production" ? otp : null }
   }

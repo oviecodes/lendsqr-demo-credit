@@ -19,11 +19,7 @@ class AuthRoutes extends CommonRoutesConfig {
 
     this.router.post(
       "/register",
-      [
-        validate(schema.register),
-        authCheck.checkAdminWardCode,
-        authCheck.checkEmailExists,
-      ],
+      [validate(schema.register), authCheck.checkEmailExists],
       authController.register
     )
 

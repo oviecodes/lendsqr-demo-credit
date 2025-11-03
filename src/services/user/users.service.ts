@@ -259,11 +259,7 @@ class UserService {
   }
 
   async findBy(field: string, value: string | number) {
-    return db
-      .table("User")
-      .where(`${field}`, value)
-      .select("id", "resihubUserId")
-      .first()
+    return db.table("User").where(`${field}`, value).select("id", "id").first()
   }
 
   async getUserEmail(userId: string | number): Promise<any> {

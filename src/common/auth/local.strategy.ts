@@ -16,34 +16,13 @@ class LocalStrategy implements AuthStrategy {
     this.AUTH_TYPE = constants.AUTH_TYPES["LOCAL"]
   }
   async register(data: any): Promise<any> {
-    if (!data.building) {
-      data.building = null
-    }
-
-    const { building, location } = data
-
-    delete data.secret
-    delete data.type
-    delete data.building
-    delete data.location
-
     try {
       return db.transaction(async (trx: Knex.Transaction) => {
-        delete data.deviceId
-
-        const resihubUserId = `RU-${randomstring.generate({
-          length: 8,
-          capitalization: "lowercase",
-          charset: "numeric",
-        })}`
-
-        const [{ id }] = await trx
-          .table("User")
-          .insert({ ...data, resihubUserId }, ["id"])
-
-        // await this.completeAuth({ id, building, location, trx }, true)
-
-        return { otp: true, id }
+        data.password = await argon2.hash(data.password)
+        // console.log(data)
+        // return { ok: true }
+        const user = await trx.table("User").insert(data).returning("id")
+        return this.tokens(user)
       })
     } catch (e) {
       console.log(e)
@@ -82,33 +61,17 @@ class LocalStrategy implements AuthStrategy {
   }
 
   async tokens(data: any) {
-    const { resourceId: resihubUserId, id: userId } = data
+    const { id: userId } = data
 
-    const accessToken = jwt.sign(
-      { resihubUserId },
-      config.ACCESS_TOKEN_SECRET,
-      {
-        expiresIn: "15m",
-        issuer: config.AUTH_ISSUER_BASE_URL,
-      }
-    )
+    const accessToken = jwt.sign({ userId }, config.ACCESS_TOKEN_SECRET, {
+      expiresIn: "24h",
+      issuer: config.AUTH_ISSUER_BASE_URL,
+    })
 
-    const refreshToken = jwt.sign(
-      { resihubUserId },
-      config.REFRESH_TOKEN_SECRET,
-      {
-        issuer: config.AUTH_ISSUER_BASE_URL,
-        expiresIn: "7d",
-      }
-    )
-
-    const tokenEncrypted = await argon2.hash(refreshToken)
-
-    // store tokens in database - use token rotation??
-    await db.table("UserToken").insert({ refreshToken: tokenEncrypted, userId })
-
-    //store token in redis
-    // await setToken(userId, { accessToken, refreshToken }, this.AUTH_TYPE)
+    const refreshToken = jwt.sign({ userId }, config.REFRESH_TOKEN_SECRET, {
+      issuer: config.AUTH_ISSUER_BASE_URL,
+      expiresIn: "7d",
+    })
 
     return { accessToken, refreshToken }
   }

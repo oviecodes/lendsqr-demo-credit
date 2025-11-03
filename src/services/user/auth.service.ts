@@ -8,10 +8,7 @@ import constants from "../../constants"
 
 class AuthService {
   async register(data: any) {
-    const { type } = data
-    delete data.type
-    const otp = await new AuthConfig(type).register(data)
-    return { email: data.email, ...otp }
+    return await new AuthConfig("local").register(data)
   }
 
   async login(data: {

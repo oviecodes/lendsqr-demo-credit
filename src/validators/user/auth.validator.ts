@@ -2,25 +2,14 @@ import Joi from "joi"
 
 const register = Joi.object({
   email: Joi.string().email().lowercase().required(),
-  type: Joi.any().valid("local", "google", "apple").default("local").required(),
+  password: Joi.string().min(7).required(),
   firstName: Joi.string().required(),
   lastName: Joi.string().required(),
-  building: Joi.object({
-    buildingId: Joi.string().uuid().required(),
-    apartmentNumber: Joi.number().integer().required(),
-  }).allow(null),
-  location: Joi.object({
-    adminWardCode: Joi.string().required(),
-    address: Joi.string().required(),
-  }),
 })
 
 const login = Joi.object({
   email: Joi.string().email().lowercase().required(),
-  type: Joi.string()
-    .valid("local", "google", "apple")
-    .default("local")
-    .required(),
+  password: Joi.string().min(7).required(),
 })
 
 const verify = Joi.object({
