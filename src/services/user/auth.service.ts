@@ -11,14 +11,8 @@ class AuthService {
     return new AuthConfig("local").register(data)
   }
 
-  async login(data: {
-    email: string
-    password: string
-    type: "local"
-    newDevice: boolean
-  }) {
-    const info = await new AuthConfig(data.type).login(data)
-    return { email: data.email, ...info }
+  async login(data: { email: string; password: string; type: "local" }) {
+    return new AuthConfig("local").login(data)
   }
 
   async generateOTP(email: string): Promise<void> {

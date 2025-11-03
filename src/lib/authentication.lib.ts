@@ -35,14 +35,7 @@ class AuthConfig implements Auth {
   }
 
   async login(data: { email: string; password?: string; newDevice?: boolean }) {
-    const resource: any = await this.strategy.login({ ...data })
-
-    let { otp, name } = resource
-    delete resource.otp
-
-    if (!otp) return this.tokens(resource)
-
-    return { otp: process.env.NODE_ENV !== "production" ? otp : null }
+    return this.strategy.login({ ...data })
   }
 
   async logout(resourceId: number | string) {

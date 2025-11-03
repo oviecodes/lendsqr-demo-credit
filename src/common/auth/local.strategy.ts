@@ -2,14 +2,10 @@ import { AuthStrategy } from "../../../index"
 import db from "../../connectors/knex.connector"
 import * as argon2 from "argon2"
 import createError from "http-errors"
-import randomstring from "randomstring"
 import { config } from "../config"
 import { Knex } from "knex"
 import jwt from "jsonwebtoken"
-import { build } from "joi"
-import AuthConfig from "../../lib/authentication.lib"
 import constants from "../../constants"
-import users from "../../services/user"
 
 class LocalStrategy implements AuthStrategy {
   AUTH_TYPE: string
@@ -18,7 +14,6 @@ class LocalStrategy implements AuthStrategy {
   }
   async register(data: any): Promise<any> {
     try {
-      // in middleware check adjutor service.
       return db.transaction(async (trx: Knex.Transaction) => {
         data.password = await argon2.hash(data.password)
         await trx.table("User").insert(data, ["id"])
@@ -34,31 +29,16 @@ class LocalStrategy implements AuthStrategy {
     }
   }
 
-  async login(data: any): Promise<{
-    email: string
-    id: string
-    resourceId: string
-    type?: string
-    otp?: boolean
-    name?: string
-  }> {
-    delete data.type
-
+  async login(data: any) {
     try {
-      const { email } = data
-
-      //check email and password
+      const { email, password } = data
       const user = await db.table("User").where("email", email).first()
-
       if (!user) throw new Error()
 
-      return {
-        id: user.id,
-        resourceId: user.resihubUserId,
-        email,
-        otp: true,
-        name: user.firstName + " " + user.lastName,
-      }
+      const validPassword = argon2.verify(user.password, password)
+      if (!validPassword) throw new Error()
+
+      return this.tokens(user)
     } catch (e) {
       throw createError[401]("Invalid credentials")
     }
@@ -86,19 +66,11 @@ class LocalStrategy implements AuthStrategy {
     //check for user
     const user = await db
       .table("User")
-      .where("resihubUserId", (decoded as jwt.JwtPayload).resihubUserId)
-      .select("id", "email", "resihubUserId")
+      .where("id", (decoded as jwt.JwtPayload).userId)
+      .select("id", "email")
       .first()
 
     if (!user) throw createError[401]("Unauthorized")
-
-    //check if access token is the current one
-    // const tokens = await getToken(user.id, this.AUTH_TYPE)
-
-    // if (!tokens || tokens.accessToken !== token)
-    //   throw createError[401]("Unauthorized")
-
-    delete user.password
 
     return user
   }
@@ -112,45 +84,20 @@ class LocalStrategy implements AuthStrategy {
     delete decoded.iat
     delete decoded.exp
 
-    const { resihubUserId } = decoded
+    const { userId } = decoded
 
     const [user] = await db
       .table("User")
-      .where("resihubUserId", resihubUserId)
+      .where("id", userId)
       .select("email", "id")
 
     if (!user) throw createError[401]("Unauthorized")
 
-    // const [dbTokens, tokens] = await Promise.all([
-    //   db
-    //     .table("UserToken")
-    //     .where("userId", user.id)
-    //     .select("refreshToken")
-    //     .orderBy("createdAt", "desc"),
-    //   // getToken(user.id, this.AUTH_TYPE),
-    // ])
-
-    // if (!dbTokens.length || !tokens) throw new createError[401]("Unauthorized")
-
-    // if decoded is valid but not the latest token, then execute the code below
-    // const isValid =
-    //   (await argon2.verify(dbTokens[0].refreshToken, token)) &&
-    //   (await argon2.verify(dbTokens[0].refreshToken, tokens.refreshToken))
-
-    // if (token !== tokens.refreshToken || !isValid) {
-    //   //delete all refresh tokens associated withn user - force relogin
-    //   await this.logout(user.id)
-    //   throw new createError[401]("Unauthorized")
-    // }
-
-    // return { isValid, resourceId: resihubUserId, id: user.id }
+    return user
   }
 
   async logout(userId: string) {
-    await Promise.all([
-      // removeToken(userId, this.AUTH_TYPE),
-      db.table("UserToken").where("userId", userId).del(),
-    ])
+    await Promise.all([db.table("UserToken").where("userId", userId).del()])
   }
 }
 

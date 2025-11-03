@@ -72,9 +72,7 @@ export interface Auth {
 
 export interface AuthStrategy {
   register: (data: AuthInput) => Promise<any>
-  login: (
-    data: AuthInput
-  ) => Promise<{ email: string; id: string; resourceId: string }>
+  login: (data: AuthInput) => Promise<any>
   tokens: (data: any) => Promise<{ refreshToken: string; accessToken: string }>
   verifyRefreshToken: (data: any) => Promise<any>
   verifyAccessToken: (data: any) => Promise<any>
