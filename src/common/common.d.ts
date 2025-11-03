@@ -78,3 +78,13 @@ export interface AuthStrategy {
   verifyAccessToken: (data: any) => Promise<any>
   logout: (data: any) => Promise<any>
 }
+
+export interface WalletOperation {
+  id: string
+  fromWalletId: string
+  type: string
+  amount: number
+  toWalletId?: string
+  bankAccount?: string
+  description?: string
+}

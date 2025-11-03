@@ -1,19 +1,36 @@
 import { Request, Response, NextFunction } from "express"
+import wallet from "../../services/wallet"
 import createError from "http-errors"
 
 class WalletController {
   constructor() {}
 
-  async fund(req: Request, res: Response, next: NextFunction) {
+  async getUserWallets(req: Request, res: Response, next: NextFunction) {
     try {
+      const data = await wallet.walletService.getUserWallets(req.user.id)
+
+      return res.status(200).json({
+        success: true,
+        message: "All useer Wallets ",
+        data,
+      })
+    } catch (e) {
+      return createError[404]("No wallet found for user")
+    }
+  }
+
+  async createWalletOperation(req: Request, res: Response, next: NextFunction) {
+    try {
+      await wallet.walletService.transaction(req.body)
+
+      return res.status(200).json({
+        success: true,
+        message: "Transaction successful",
+      })
     } catch (e) {
       return createError[400]("An Error Occured")
     }
   }
-
-  async withdraw(req: Request, res: Response, next: NextFunction) {}
-
-  async transfer(req: Request, res: Response, next: NextFunction) {}
 }
 
 export default new WalletController()
