@@ -16,17 +16,6 @@ class UsersRoutes extends CommonRoutesConfig {
   configureRoutes(): Router {
     this.router.get("/me", [auth], usersController.me)
 
-    this.router.patch(
-      "/me",
-      [
-        auth,
-        validate(userSchema.update),
-        userCheck.checkPreviousProfileImage,
-        userCheck.checkUserLocationAndBuildingUpdate,
-      ],
-      usersController.update
-    )
-
     return this.router
   }
 }

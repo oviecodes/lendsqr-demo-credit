@@ -1,4 +1,4 @@
-name: Portaul CI
+name: Demo-credit CI
 
 on:
   push:
