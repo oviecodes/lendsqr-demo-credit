@@ -19,23 +19,15 @@ class AuthRoutes extends CommonRoutesConfig {
 
     this.router.post(
       "/register",
-      [validate(schema.register), authCheck.checkEmailExists],
+      [
+        validate(schema.register),
+        authCheck.checkEmailExists,
+        authCheck.checkAdjustor,
+      ],
       authController.register
     )
 
-    this.router.post(
-      "/verify",
-      [validate(schema.verify)],
-      authController.validateOTP
-    )
-
     this.router.post("/login", [validate(schema.login)], authController.login)
-
-    this.router.post(
-      "/verify-passkey",
-      [validate(schema.passkey), authCheck.checkUserFomEmail],
-      authController.checkPassKey
-    )
 
     this.router.post(
       "/refresh",
@@ -47,12 +39,6 @@ class AuthRoutes extends CommonRoutesConfig {
       "/check-email",
       [validate(schema.checkEmail)],
       authController.checkEmail
-    )
-
-    this.router.post(
-      "/get-otp",
-      [validate(schema.checkEmail)],
-      authController.getOTP
     )
 
     return this.router

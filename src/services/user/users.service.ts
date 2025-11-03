@@ -102,6 +102,16 @@ class UserService {
     })
   }
 
+  async createUser(data: Record<string, string>) {
+    return db.table("User").insert(data, ["id"])
+  }
+
+  async createWallet(userId: string) {
+    await db.table("Wallet").insert({
+      userId,
+    })
+  }
+
   getUpdateObj(data: any) {
     const props = ["firstName", "lastName", "email"]
 

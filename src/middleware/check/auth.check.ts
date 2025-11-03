@@ -25,3 +25,12 @@ export const checkUserFomEmail = async (
   req.body.userId = user[0].id
   next()
 }
+
+export const checkAdjustor = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  // API call to adjutor service
+  next()
+}

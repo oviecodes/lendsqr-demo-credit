@@ -29,7 +29,7 @@ class AuthConfig implements Auth {
   }
 
   async register(data: { email: string; password?: string }): Promise<any> {
-    await this.strategy.register({
+    return this.strategy.register({
       ...data,
     })
   }

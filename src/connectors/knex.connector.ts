@@ -2,9 +2,11 @@ import dotenv from "dotenv"
 dotenv.config()
 
 import { knex } from "knex"
-import { config } from "../../knexfile"
+import config from "../../knexfile"
 import { attachPaginate } from "knex-paginate"
 
 const knexInstance = knex(config[`${process.env.NODE_ENV}`])
+
+attachPaginate()
 
 export default knexInstance

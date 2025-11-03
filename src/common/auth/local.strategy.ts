@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken"
 import { build } from "joi"
 import AuthConfig from "../../lib/authentication.lib"
 import constants from "../../constants"
+import users from "../../services/user"
 
 class LocalStrategy implements AuthStrategy {
   AUTH_TYPE: string
@@ -17,11 +18,14 @@ class LocalStrategy implements AuthStrategy {
   }
   async register(data: any): Promise<any> {
     try {
+      // in middleware check adjutor service.
       return db.transaction(async (trx: Knex.Transaction) => {
         data.password = await argon2.hash(data.password)
-        // console.log(data)
-        // return { ok: true }
-        const user = await trx.table("User").insert(data).returning("id")
+        await trx.table("User").insert(data, ["id"])
+        const user = await trx.table("User").where("email", data.email).first()
+        await trx.table("Wallet").insert({
+          userId: user.id,
+        })
         return this.tokens(user)
       })
     } catch (e) {

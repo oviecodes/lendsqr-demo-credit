@@ -8,7 +8,7 @@ import constants from "../../constants"
 
 class AuthService {
   async register(data: any) {
-    return await new AuthConfig("local").register(data)
+    return new AuthConfig("local").register(data)
   }
 
   async login(data: {
