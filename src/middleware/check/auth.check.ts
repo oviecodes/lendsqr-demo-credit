@@ -32,5 +32,7 @@ export const checkAdjustor = async (
   next: NextFunction
 ) => {
   // API call to adjutor service
+
+  req.body.verified = true
   next()
 }
