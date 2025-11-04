@@ -16,7 +16,7 @@ class WalletRoutes extends CommonRoutesConfig {
   configureRoutes(): Router {
     this.router.get("/", [auth], walletController.getUserWallets)
 
-    this.router.get("/:id", [auth])
+    this.router.get("/:id", [auth], walletController.getWalletData)
     this.router.post(
       "/:id/transaction",
       [

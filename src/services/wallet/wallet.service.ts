@@ -54,7 +54,7 @@ class WalletService {
       amount,
       type: "credit",
       balanceBefore: receiver.balance,
-      balanceAfter: receiver.balance + amount,
+      balanceAfter: Number(receiver.balance) + Number(amount),
       referenceId: operationId,
       referenceType: type,
     })
@@ -81,15 +81,21 @@ class WalletService {
       amount,
     })
 
+    console.log(typeof amount)
+
+    console.log(wallet.balance, amount, Number(wallet.balance) + Number(amount))
+
     await this.createWalletTransaction(trx, {
       walletId: toWalletId,
       amount,
       type: "credit",
       balanceBefore: wallet.balance,
-      balanceAfter: wallet.balance + amount,
+      balanceAfter: Number(wallet.balance) + amount,
       referenceId: operationId,
       referenceType: type,
     })
+
+    console.log(amount)
 
     await this.updateWalletBalance(trx, toWalletId, amount)
 
@@ -129,6 +135,26 @@ class WalletService {
     return operationId
   }
 
+  async walletData(walletId: string) {
+    try {
+      const [walletData, walletHistory] = await Promise.all([
+        db.table("Wallet").where("id", walletId).first(),
+        db
+          .table("WalletTransaction")
+          .where("walletId", walletId)
+          .orderBy("created_at", "desc"),
+      ])
+
+      return {
+        ...walletData,
+        walletHistory,
+      }
+    } catch (e) {
+      console.log(e)
+      return createHttpError[404]("Invalid request")
+    }
+  }
+
   private async lockAndValidateWallet(
     trx: Knex.Transaction,
     walletId: string,
@@ -166,10 +192,12 @@ class WalletService {
   private async createOperation(trx: Knex.Transaction, data: any) {
     await trx("WalletOperation").insert({ ...data, status: "completed" })
 
-    return db
+    const operation = await trx
       .table("WalletOperation")
       .where("reference", data.reference)
       .first()
+
+    return operation.id
   }
 
   private async createWalletTransaction(trx: Knex.Transaction, data: any) {
@@ -193,11 +221,11 @@ class WalletService {
     }
   }
 
-  async checkUserWallet(data: WalletOperation) {
-    const { id: userId, fromWalletId } = data
+  async checkUserWallet(data: { userId: string; walletId: string }) {
+    const { userId, walletId } = data
     return db
       .table("Wallet")
-      .where("id", fromWalletId)
+      .where("id", walletId)
       .andWhere("userId", userId)
       .first()
   }

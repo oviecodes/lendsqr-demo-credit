@@ -5,9 +5,9 @@ export async function up(knex: Knex): Promise<void> {
     table.uuid("id").primary().defaultTo(knex.raw("(UUID())"))
     table.uuid("walletId").notNullable().index()
 
-    table.decimal("amount").notNullable()
-    table.decimal("balanceBefore").notNullable()
-    table.decimal("balanceAfter").notNullable()
+    table.bigInteger("amount").notNullable()
+    table.bigInteger("balanceBefore").notNullable()
+    table.bigInteger("balanceAfter").notNullable()
 
     table.enum("type", ["credit", "debit"]).notNullable()
     table.string("description", 500).nullable()

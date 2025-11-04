@@ -3,12 +3,14 @@ import debug from "debug"
 
 import { CommonRoutesConfig } from "../common/common.routes.config"
 import userRoutes from "./user"
+import walletRoutes from "./wallet"
 
 const router: Router = Router()
 export const routes: Array<CommonRoutesConfig> = []
 const log: debug.IDebugger = debug("routes")
 
 router.use("/user", userRoutes)
+router.use("/wallet", walletRoutes)
 
 router.use(
   (

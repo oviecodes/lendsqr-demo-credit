@@ -8,9 +8,20 @@ export const checkUserWallet = async (
   next: NextFunction
 ) => {
   try {
-    req.body.id = req.user.id
-    req.body.fromWalletId = req.params.id
-    const userWallet = await wallet.walletService.checkUserWallet(req.body)
+    req.body.userId = req.user.id
+    if (req.body.type.toLowerCase() === "deposit") {
+      req.body.toWalletId = req.params.id
+    } else {
+      req.body.fromWalletId = req.params.id
+    }
+
+    const userWallet = await wallet.walletService.checkUserWallet({
+      userId: req.body.userId,
+      walletId:
+        req.body.type === "deposit"
+          ? req.body.toWalletId
+          : req.body.fromWalletId,
+    })
     if (!userWallet) throw new Error()
 
     if (req.body.toWalletId) {
@@ -23,6 +34,7 @@ export const checkUserWallet = async (
 
     return next()
   } catch (e) {
+    console.log(e)
     return next(
       createHttpError.UnprocessableEntity("Cannot process transaction")
     )

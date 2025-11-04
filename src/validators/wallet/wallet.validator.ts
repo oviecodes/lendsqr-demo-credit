@@ -5,7 +5,7 @@ const createTransaction = Joi.object({
   toWalletId: Joi.string(),
   description: Joi.string(),
   amount: Joi.number().required(),
-  bankAccount: Joi.number(),
+  bankAccount: Joi.string().min(10).max(10),
 })
 
 const userSchema = {

@@ -9,7 +9,7 @@ export async function up(knex: Knex): Promise<void> {
     table.uuid("fromWalletId").nullable()
     table.uuid("toWalletId").nullable()
 
-    table.decimal("amount").notNullable()
+    table.bigInteger("amount").notNullable()
     table
       .enum("status", ["pending", "completed", "failed"])
       .defaultTo("pending")

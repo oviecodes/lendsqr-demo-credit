@@ -5,7 +5,7 @@ export async function up(knex: Knex): Promise<void> {
     table.uuid("id").primary().defaultTo(knex.raw("(UUID())"))
     table.uuid("userId").notNullable().index()
     table.enum("type", ["naira", "dollar"]).defaultTo("naira")
-    table.decimal("balance").defaultTo(0).notNullable()
+    table.bigInteger("balance").defaultTo(0).notNullable()
     table.timestamps(true, true)
 
     table.foreign("userId").references("id").inTable("User").onDelete("CASCADE")

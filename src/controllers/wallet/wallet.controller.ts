@@ -31,6 +31,20 @@ class WalletController {
       return createError[400]("An Error Occured")
     }
   }
+
+  async getWalletData(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await wallet.walletService.walletData(req.params.id)
+
+      return res.status(200).json({
+        success: true,
+        message: "All Wallet Data",
+        data,
+      })
+    } catch (e) {
+      return createError[400]("An Error Occured")
+    }
+  }
 }
 
 export default new WalletController()
