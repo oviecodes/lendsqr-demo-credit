@@ -11,3 +11,4 @@ docker-compose.dev.yml
 userData.txt
 firebase/
 prod_dump.sql
+TESTING.md

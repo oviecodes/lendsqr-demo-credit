@@ -49,10 +49,14 @@ app.get("/", (req: express.Request, res: express.Response, next) => {
 
 app.use("/v1", router)
 
-server.listen(port, () => {
-  console.log(runningMessage)
+if (process.env.NODE_ENV !== "test") {
+  server.listen(port, () => {
+    console.log(runningMessage)
 
-  routes.forEach((route: CommonRoutesConfig) => {
-    console.log(`Routes configured for ${route.getName()}`)
+    routes.forEach((route: CommonRoutesConfig) => {
+      console.log(`Routes configured for ${route.getName()}`)
+    })
   })
-})
+}
+
+export { app, server }
