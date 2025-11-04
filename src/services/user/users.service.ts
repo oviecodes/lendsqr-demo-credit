@@ -33,7 +33,7 @@ class UserService {
           JSON_ARRAYAGG(
             JSON_OBJECT(
               'id', Wallet.id,
-              'balance', Wallet.balance,
+              'balance',  balance / 100.0,
               'type', Wallet.type
             )
           ) as wallets

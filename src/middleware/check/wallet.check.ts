@@ -2,6 +2,15 @@ import { Request, Response, NextFunction } from "express"
 import createHttpError from "http-errors"
 import wallet from "../../services/wallet"
 
+export const convertToCents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  req.body.amount = req.body.amount * 100
+  return next()
+}
+
 export const checkUserWallet = async (
   req: Request,
   res: Response,
@@ -9,7 +18,7 @@ export const checkUserWallet = async (
 ) => {
   try {
     req.body.userId = req.user.id
-    if (req.body.type.toLowerCase() === "deposit") {
+    if (req.body.type && req.body.type.toLowerCase() === "deposit") {
       req.body.toWalletId = req.params.id
     } else {
       req.body.fromWalletId = req.params.id
@@ -20,7 +29,7 @@ export const checkUserWallet = async (
       walletId:
         req.body.type === "deposit"
           ? req.body.toWalletId
-          : req.body.fromWalletId,
+          : req.body.fromWalletId || req.params.id,
     })
     if (!userWallet) throw new Error()
 

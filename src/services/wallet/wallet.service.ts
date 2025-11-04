@@ -138,10 +138,29 @@ class WalletService {
   async walletData(walletId: string) {
     try {
       const [walletData, walletHistory] = await Promise.all([
-        db.table("Wallet").where("id", walletId).first(),
+        db
+          .table("Wallet")
+          .where("id", walletId)
+          .select(
+            "*",
+            db.raw(
+              "CAST(balance / 100.0 as Decimal(10, 2)) as balance"
+            )
+          )
+          .first(),
         db
           .table("WalletTransaction")
           .where("walletId", walletId)
+          .select(
+            "*",
+            db.raw(
+              "CAST(balanceBefore / 100.0 as Decimal(10, 2)) as balanceBefore"
+            ),
+            db.raw(
+              "CAST(balanceAfter / 100.0 as Decimal(10, 2)) as balanceAfter"
+            ),
+            db.raw("CAST(amount / 100.0 as Decimal(10, 2)) as amount")
+          )
           .orderBy("created_at", "desc"),
       ])
 
@@ -235,7 +254,13 @@ class WalletService {
   }
 
   async getUserWallets(userId: string) {
-    return db.table("Wallet").where("userId", userId)
+    return db
+      .table("Wallet")
+      .where("userId", userId)
+      .select(
+        "*",
+        db.raw("CAST(balance / 100.0 as Decimal(10, 2)) as balance ")
+      )
   }
 }
 
