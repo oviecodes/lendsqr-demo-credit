@@ -4,6 +4,7 @@ export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable("WalletOperation", (table) => {
     table.uuid("id").primary().defaultTo(knex.raw("(UUID())"))
     table.enum("type", ["transfer", "withdrawal", "deposit"]).notNullable()
+    table.string("reference").notNullable()
 
     table.uuid("fromWalletId").nullable()
     table.uuid("toWalletId").nullable()

@@ -1,90 +1,196 @@
 import { Knex } from "knex"
 import db from "../../connectors/knex.connector"
 import { WalletOperation } from "../../../index"
+import createHttpError from "http-errors"
+import randomstring from "randomstring"
 
 class WalletService {
   async transaction(data: WalletOperation) {
-    // get currency wallet
-
-    const { type, fromWalletId, toWalletId, bankAccount, description, amount } =
-      data
+    const { type } = data
 
     return db.transaction(async (trx: Knex.Transaction) => {
-      // const []
-      // use walletId
-
-      trx.table("WalletOperation").insert({
-        type,
-        fromWalletId,
-        toWalletId,
-        bankAccount,
-        status: "pending",
-        description,
-      })
-
-      // 1. Get and lock wallets
-      const senderWallet = await trx("Wallet")
-        .where({ id: fromWalletId })
-        .forUpdate() // Lock row
-        .first()
-
-      const receiverWallet = await trx("Wallet")
-        .where({ id: toWalletId })
-        .forUpdate()
-        .first()
-
-      // 2. Validate
-      if (senderWallet.balance < amount) {
-        throw new Error("Insufficient balance")
+      switch (type.toLowerCase()) {
+        case "deposit":
+          return this.deposit(trx, data)
+        case "withdrawal":
+          return this.withdraw(trx, data)
+        case "transfer":
+          return this.transfer(trx, data)
+        default:
+          return
       }
-
-      // 3. Create operation
-      const [operationId] = await trx("WalletOperation").insert({
-        type: "transfer",
-        fromWalletId,
-        toWalletId,
-        amount,
-        status: "pending",
-      })
-
-      // 4. Create debit transaction
-      await trx("WalletTransaction").insert({
-        walletId: fromWalletId,
-        amount,
-        type: "debit",
-        balanceBefore: senderWallet.balance,
-        balanceAfter: senderWallet.balance - amount,
-        referenceId: operationId,
-        referenceType: "transfer",
-        status: "completed",
-      })
-
-      // 5. Create credit transaction
-      await trx("WalletTransaction").insert({
-        walletId: toWalletId,
-        amount,
-        type: "credit",
-        balanceBefore: receiverWallet.balance,
-        balanceAfter: receiverWallet.balance + amount,
-        referenceId: operationId,
-        referenceType: "transfer",
-        status: "completed",
-      })
-
-      // 6. UPDATE WALLET BALANCES 👈👈👈
-      await trx("Wallet")
-        .where({ id: fromWalletId })
-        .decrement("balance", amount)
-
-      await trx("Wallet").where({ id: toWalletId }).increment("balance", amount)
-
-      // 7. Mark operation complete
-      await trx("WalletOperation")
-        .where({ id: operationId })
-        .update({ status: "completed" })
-
-      return operationId
     })
+  }
+
+  async transfer(trx: Knex.Transaction, data: WalletOperation) {
+    const { type, toWalletId, fromWalletId, amount, description } = data
+    const sender = await this.lockAndValidateWallet(trx, fromWalletId, amount)
+    const receiver = await this.lockWallet(trx, toWalletId!)
+
+    const operationId = await this.createOperation(trx, {
+      reference: randomstring.generate({
+        length: 10,
+        charset: "alphabetic",
+        capitalization: "lowercase",
+      }),
+      type: type,
+      fromWalletId,
+      toWalletId,
+      amount,
+    })
+
+    await this.createWalletTransaction(trx, {
+      walletId: fromWalletId,
+      amount,
+      type: "debit",
+      balanceBefore: sender.balance,
+      balanceAfter: sender.balance - amount,
+      referenceId: operationId,
+      referenceType: type,
+    })
+
+    await this.createWalletTransaction(trx, {
+      walletId: toWalletId,
+      amount,
+      type: "credit",
+      balanceBefore: receiver.balance,
+      balanceAfter: receiver.balance + amount,
+      referenceId: operationId,
+      referenceType: type,
+    })
+
+    await this.updateWalletBalance(trx, fromWalletId, -amount)
+    await this.updateWalletBalance(trx, toWalletId!, amount)
+
+    return operationId
+  }
+
+  async deposit(trx: Knex.Transaction, data: WalletOperation) {
+    const { type, toWalletId, amount } = data
+
+    const wallet = await this.lockWallet(trx, toWalletId)
+
+    const operationId = await this.createOperation(trx, {
+      reference: randomstring.generate({
+        length: 10,
+        charset: "alphabetic",
+        capitalization: "lowercase",
+      }),
+      type,
+      toWalletId,
+      amount,
+    })
+
+    await this.createWalletTransaction(trx, {
+      walletId: toWalletId,
+      amount,
+      type: "credit",
+      balanceBefore: wallet.balance,
+      balanceAfter: wallet.balance + amount,
+      referenceId: operationId,
+      referenceType: type,
+    })
+
+    await this.updateWalletBalance(trx, toWalletId, amount)
+
+    return operationId
+  }
+
+  async withdraw(trx: Knex.Transaction, data: WalletOperation) {
+    const { type, fromWalletId, amount, description, bankAccount } = data
+
+    const wallet = await this.lockAndValidateWallet(trx, fromWalletId, amount)
+
+    const operationId = await this.createOperation(trx, {
+      reference: randomstring.generate({
+        length: 10,
+        charset: "alphabetic",
+        capitalization: "lowercase",
+      }),
+      type,
+      fromWalletId,
+      amount,
+      bankAccount,
+      description,
+    })
+
+    await this.createWalletTransaction(trx, {
+      walletId: fromWalletId,
+      amount,
+      type: "debit",
+      balanceBefore: wallet.balance,
+      balanceAfter: wallet.balance - amount,
+      referenceId: operationId,
+      referenceType: type,
+    })
+
+    await this.updateWalletBalance(trx, fromWalletId, -amount)
+
+    return operationId
+  }
+
+  private async lockAndValidateWallet(
+    trx: Knex.Transaction,
+    walletId: string,
+    requiredAmount: number
+  ) {
+    const wallet = await trx("Wallet")
+      .where({ id: walletId })
+      .forUpdate()
+      .first()
+
+    if (!wallet) {
+      throw new createHttpError.NotFound("Wallet not found")
+    }
+
+    if (wallet.balance < requiredAmount) {
+      throw new createHttpError.BadRequest("Insufficient balance")
+    }
+
+    return wallet
+  }
+
+  private async lockWallet(trx: Knex.Transaction, walletId: string) {
+    const wallet = await trx("Wallet")
+      .where({ id: walletId })
+      .forUpdate()
+      .first()
+
+    if (!wallet) {
+      throw new createHttpError.NotFound("Wallet not found")
+    }
+
+    return wallet
+  }
+
+  private async createOperation(trx: Knex.Transaction, data: any) {
+    await trx("WalletOperation").insert({ ...data, status: "completed" })
+
+    return db
+      .table("WalletOperation")
+      .where("reference", data.reference)
+      .first()
+  }
+
+  private async createWalletTransaction(trx: Knex.Transaction, data: any) {
+    await trx("WalletTransaction").insert({
+      ...data,
+      status: "completed",
+    })
+  }
+
+  private async updateWalletBalance(
+    trx: Knex.Transaction,
+    walletId: string,
+    amount: number
+  ) {
+    if (amount > 0) {
+      await trx("Wallet").where({ id: walletId }).increment("balance", amount)
+    } else {
+      await trx("Wallet")
+        .where({ id: walletId })
+        .decrement("balance", Math.abs(amount))
+    }
   }
 
   async checkUserWallet(data: WalletOperation) {
