@@ -13,6 +13,7 @@ describe("Wallet routes", () => {
     let toToken: string
 
     let balance: number = 0
+    let transactionCount: number = 0
 
     beforeAll(async () => {
       const opts = {
@@ -57,6 +58,8 @@ describe("Wallet routes", () => {
       toWalletId = secondWalletsRes.body.data[0].id
     })
 
+    afterAll(async () => {})
+
     it("withdraw more than a user balance", async () => {
       const res = await request(app)
         .post(`/v1/wallet/${walletId}/transaction`)
@@ -85,9 +88,10 @@ describe("Wallet routes", () => {
         })
 
       balance += 100
+      transactionCount++
       expect(res.status).toBe(200)
       expect(res.type).toMatch(/json/)
-      expect(res.body).toHaveProperty("status", true)
+      expect(res.body).toHaveProperty("success", true)
       expect(res.body.message).toBe("Transaction successful")
     })
 
@@ -102,9 +106,10 @@ describe("Wallet routes", () => {
         })
 
       balance -= 20
+      transactionCount++
       expect(res.status).toBe(200)
       expect(res.type).toMatch(/json/)
-      expect(res.body).toHaveProperty("status", true)
+      expect(res.body).toHaveProperty("success", true)
       expect(res.body.message).toBe("Transaction successful")
     })
 
@@ -115,19 +120,46 @@ describe("Wallet routes", () => {
         .send({
           type: "transfer",
           amount: 20,
-          walletId,
+          toWalletId: walletId,
         })
 
-      expect(res.status).toBe(400)
+      expect(res.status).toBe(422)
       expect(res.type).toMatch(/json/)
       expect(res.body).toHaveProperty("status", false)
       expect(res.body.message).toBe("Cannot process transaction")
     })
 
-    it("withdrawal should work", async () => {})
+    it("withdrawal should work with updated balance", async () => {
+      const res = await request(app)
+        .post(`/v1/wallet/${walletId}/transaction`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          type: "withdrawal",
+          amount: 20,
+          description: "Attempt withdrawal",
+          bankAccount: "1234567890",
+        })
 
-    it("wallet balance should match", async () => {})
+      balance -= 20
+      transactionCount++
+      expect(res.status).toBe(200)
+      expect(res.type).toMatch(/json/)
+      expect(res.body.message).toBe("Transaction successful")
+    })
+
+    it("wallet balance should match along with transaction count", async () => {
+      const res = await request(app)
+        .get(`/v1/wallet/${walletId}`)
+        .set("Authorization", `Bearer ${token}`)
+
+      expect(res.status).toBe(200)
+      expect(res.type).toMatch(/json/)
+      expect(res.body).toHaveProperty("success", true)
+      expect(parseInt(res.body.data.balance)).toEqual(balance)
+      expect(res.body.data.walletHistory.length).toEqual(3)
+    })
   })
+
   describe("Unauthorized access", () => {
     it("GET /v1/wallet should return 401 without token", async () => {
       const res = await request(app).get("/v1/wallet")
