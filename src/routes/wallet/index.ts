@@ -19,8 +19,6 @@ router.use(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    log(`User routes - ${err}`)
-    console.log(err)
     return res.status((err as any).status || 500).json({
       status: false,
       message: err.message,

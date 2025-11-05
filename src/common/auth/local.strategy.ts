@@ -16,7 +16,7 @@ class LocalStrategy implements AuthStrategy {
     try {
       return db.transaction(async (trx: Knex.Transaction) => {
         data.password = await argon2.hash(data.password)
-        await trx.table("User").insert(data, ["id"])
+        await trx.table("User").insert(data)
         const user = await trx.table("User").where("email", data.email).first()
         await trx.table("Wallet").insert({
           userId: user.id,

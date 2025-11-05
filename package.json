@@ -10,7 +10,7 @@
     "watch": "tsc -w",
     "dev": "export NODE_ENV=development && tsc-watch --onSuccess 'concurrently \"node dist/app.js\"'",
     "seeds": "npx ts-node src/seeds/index.ts",
-    "test": "cross-env NODE_ENV=test jest --runInBand",
+    "test": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles",
     "test:watch": "cross-env NODE_ENV=test jest --watch"
   },
   "keywords": [],

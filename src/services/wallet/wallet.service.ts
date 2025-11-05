@@ -1,7 +1,7 @@
 import { Knex } from "knex"
 import db from "../../connectors/knex.connector"
 import { WalletOperation } from "../../../index"
-import createHttpError from "http-errors"
+import createHttpError, { HttpErrorConstructor } from "http-errors"
 import randomstring from "randomstring"
 
 class WalletService {
@@ -143,9 +143,7 @@ class WalletService {
           .where("id", walletId)
           .select(
             "*",
-            db.raw(
-              "CAST(balance / 100.0 as Decimal(10, 2)) as balance"
-            )
+            db.raw("CAST(balance / 100.0 as Decimal(10, 2)) as balance")
           )
           .first(),
         db

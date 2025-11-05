@@ -15,7 +15,7 @@ class WalletController {
         data,
       })
     } catch (e) {
-      return createError[404]("No wallet found for user")
+      return next(createError[404]("No wallet found for user"))
     }
   }
 
@@ -27,8 +27,9 @@ class WalletController {
         success: true,
         message: "Transaction successful",
       })
-    } catch (e) {
-      return createError[400]("An Error Occured")
+    } catch (e: any) {
+      // console.log(e)
+      return next(createError[400](e.message))
     }
   }
 
@@ -42,7 +43,7 @@ class WalletController {
         data,
       })
     } catch (e) {
-      return createError[400]("An Error Occured")
+      return next(createError[400]("An Error Occured"))
     }
   }
 }

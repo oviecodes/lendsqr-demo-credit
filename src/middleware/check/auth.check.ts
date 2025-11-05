@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express"
 import createHttpError from "http-errors"
 import users from "../../services/user"
 import db from "../../connectors/knex.connector"
+import axios from "axios"
 
 export const checkEmailExists = async (
   req: Request,
@@ -32,6 +33,24 @@ export const checkAdjustor = async (
   next: NextFunction
 ) => {
   // API call to adjutor service
+  const adjutor = await axios.get(
+    `https://adjutor.lendsqr.com/v2/verification/karma/${req.body.email}`,
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.LENDSQR_API_KEY}`,
+      },
+    }
+  )
+
+  console.log("adjutor response", adjutor.data)
+
+  if (Number(adjutor.data.amount_in_contention)) {
+    next(
+      createHttpError.BadRequest(
+        "Cannot create an account - user has been found in a Loan Blacklist"
+      )
+    )
+  }
 
   req.body.verified = true
   next()
