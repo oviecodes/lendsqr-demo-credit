@@ -1,5 +1,6 @@
 import request from "supertest"
 import { app } from "../app"
+import randomstring from "randomstring"
 
 // transfer to non-existent wallet
 // withdraw more than a user balance
@@ -8,30 +9,52 @@ describe("Wallet routes", () => {
   describe("Withdraw limits (authorized)", () => {
     let token: string
     let walletId: string
+    let toWalletId: string
+    let toToken: string
+
+    let balance: number = 0
 
     beforeAll(async () => {
-      const uniq = Date.now()
-      const registerRes = await request(app)
-        .post("/v1/user/auth/register")
-        .send({
-          email: `wallet-user+${uniq}@example.com`,
-          password: "password123",
-          firstName: "Test",
-          lastName: "User",
-        })
+      const opts = {
+        length: 8,
+        charset: "alphabetic",
+      }
+      const [registerRes, secondRegisterRes] = await Promise.all([
+        request(app)
+          .post("/v1/user/auth/register")
+          .send({
+            email: `wallet-user+${randomstring.generate(opts)}@example.com`,
+            password: "password123",
+            firstName: "Test",
+            lastName: "User",
+          }),
+        request(app)
+          .post("/v1/user/auth/register")
+          .send({
+            email: `wallet-user+${randomstring.generate(opts)}@example.com`,
+            password: "password123",
+            firstName: "Test",
+            lastName: "User",
+          }),
+      ])
 
       expect(registerRes.status).toBe(200)
       expect(registerRes.body).toHaveProperty("data.accessToken")
       token = registerRes.body.data.accessToken
+      toToken = secondRegisterRes.body.data.accessToken
 
-      const walletsRes = await request(app)
-        .get("/v1/wallet")
-        .set("Authorization", `Bearer ${token}`)
+      const [walletsRes, secondWalletsRes] = await Promise.all([
+        request(app).get("/v1/wallet").set("Authorization", `Bearer ${token}`),
+        request(app)
+          .get("/v1/wallet")
+          .set("Authorization", `Bearer ${toToken}`),
+      ])
 
       expect(walletsRes.status).toBe(200)
       expect(Array.isArray(walletsRes.body.data)).toBe(true)
       expect(walletsRes.body.data.length).toBeGreaterThan(0)
       walletId = walletsRes.body.data[0].id
+      toWalletId = secondWalletsRes.body.data[0].id
     })
 
     it("withdraw more than a user balance", async () => {
@@ -50,6 +73,60 @@ describe("Wallet routes", () => {
       expect(res.body).toHaveProperty("status", false)
       expect(typeof res.body.message).toBe("string")
     })
+
+    it("deposit to a user wallet", async () => {
+      const res = await request(app)
+        .post(`/v1/wallet/${walletId}/transaction`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          type: "deposit",
+          amount: 100,
+          description: "Deposit",
+        })
+
+      balance += 100
+      expect(res.status).toBe(200)
+      expect(res.type).toMatch(/json/)
+      expect(res.body).toHaveProperty("status", true)
+      expect(res.body.message).toBe("Transaction successful")
+    })
+
+    it("transfer to a different user's wallet", async () => {
+      const res = await request(app)
+        .post(`/v1/wallet/${walletId}/transaction`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          type: "transfer",
+          amount: 20,
+          toWalletId,
+        })
+
+      balance -= 20
+      expect(res.status).toBe(200)
+      expect(res.type).toMatch(/json/)
+      expect(res.body).toHaveProperty("status", true)
+      expect(res.body.message).toBe("Transaction successful")
+    })
+
+    it("transfer to same wallet should fail", async () => {
+      const res = await request(app)
+        .post(`/v1/wallet/${walletId}/transaction`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          type: "transfer",
+          amount: 20,
+          walletId,
+        })
+
+      expect(res.status).toBe(400)
+      expect(res.type).toMatch(/json/)
+      expect(res.body).toHaveProperty("status", false)
+      expect(res.body.message).toBe("Cannot process transaction")
+    })
+
+    it("withdrawal should work", async () => {})
+
+    it("wallet balance should match", async () => {})
   })
   describe("Unauthorized access", () => {
     it("GET /v1/wallet should return 401 without token", async () => {
