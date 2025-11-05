@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsc && export NODE_ENV=production && node 'concurrently \"node dist/app.js\"'",
+    "start": "export NODE_ENV=production && node app.js",
     "debug": "export DEBUG=* && npm run start",
     "build": "tsc",
     "watch": "tsc -w",
