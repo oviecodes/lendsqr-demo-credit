@@ -10,7 +10,7 @@ class AuthController {
       return res.status(200).json({
         success: true,
         message: "User registered successfully",
-        data: process.env.NODE_ENV === "production" ? null : data,
+        data,
       })
     } catch (e: any) {
       return next(createError(e))
