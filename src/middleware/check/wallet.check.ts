@@ -24,6 +24,13 @@ export const checkUserWallet = async (
       req.body.fromWalletId = req.params.id
     }
 
+    if (req.body.type && req.body.type.toLowerCase() === "transfer") {
+      // check that to fromWalletId !== toWalletId
+      if (req.body.toWalletId === req.params.id) {
+        throw new Error()
+      }
+    }
+
     const userWallet = await wallet.walletService.checkUserWallet({
       userId: req.body.userId,
       walletId:

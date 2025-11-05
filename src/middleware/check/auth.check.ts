@@ -42,9 +42,7 @@ export const checkAdjustor = async (
     }
   )
 
-  console.log("adjutor response", adjutor.data)
-
-  if (Number(adjutor.data.amount_in_contention)) {
+  if (Number(adjutor.data.data.amount_in_contention) > 0) {
     next(
       createHttpError.BadRequest(
         "Cannot create an account - user has been found in a Loan Blacklist"
