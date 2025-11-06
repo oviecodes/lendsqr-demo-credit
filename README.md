@@ -190,9 +190,9 @@ npm test            # runs with NODE_ENV=test
 npm run test:watch
 ```
 
-<!-- ### Approach
+### Approach
 
-- **Environment**: Use `.env.test` with a dedicated test DB and the required JWT secrets. `knexfile.ts` contains a `test` environment using your envs.
+- **Environment**: Use `.env` with a dedicated test DB and the required JWT secrets. `knexfile.ts` contains a `test` environment using your envs.
 - **Boot**: The app exports the Express `app` and only listens when `NODE_ENV !== 'test'`, so Supertest can run in-memory.
 - **Migrations**: Run migrations before tests (see "Migrate the database"). Optionally, wire global setup to migrate automatically.
 - **Auth flow in tests**:
@@ -200,9 +200,6 @@ npm run test:watch
   - Capture `data.accessToken` and set `Authorization: Bearer <token>` for subsequent requests.
   - Query `/v1/wallet` to get the user wallet ID.
   - Use `/v1/wallet/:id/transaction` to exercise deposit/withdraw/transfer scenarios.
-- **Isolation**:
-  - Simple: clean specific tables between tests (truncate operations/transactions).
-  - Faster (optional): wrap each test in a transaction and roll back in `afterEach` if your code path shares the same connection.
 
 ### Sample coverage
 
@@ -224,4 +221,3 @@ See `package.json`:
 
 - Ensure the DB user has privileges to create/alter tables and run transactions.
 - JWT secrets must be stable across test runs to validate tokens.
-- For production, sensitive config should come from your deployment environment. -->
