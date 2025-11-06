@@ -15,57 +15,6 @@ class AuthService {
     return new AuthConfig("local").login(data)
   }
 
-  async generateOTP(email: string): Promise<void> {
-    const user = await db
-      .table("User")
-      .where("email", email)
-      .select("id")
-      .first()
-
-    if (!user) return
-
-    // const { code, name }: any = await new AuthConfig(
-    //   constants.AUTH_TYPES.LOCAL
-    // ).generateOTP(user.id, true)
-  }
-
-  async verifyOTP(data: { email: string; token: string }) {
-    const { email, token } = data
-
-    const [{ id, verified, resihubUserId }] = await db
-      .table("User")
-      .where("email", email)
-      .select("id", "verified", "resihubUserId")
-
-    // const isValid = await AuthConfig.validateOTP({
-    //   resourceId: id,
-    //   type: "local",
-    //   token,
-    // })
-
-    // if (!isValid) {
-    //   throw createError[401]("Invalid token")
-    // }
-
-    await db
-      .table("UserVerificationCode")
-      .where("userId", id)
-      .update({ code: "" })
-
-    // if user is not verified, set verification to true
-    if (!verified)
-      await db.table("User").where("id", id).update({ verified: true })
-
-    return await new AuthConfig("local").tokens({
-      id,
-      resourceId: resihubUserId,
-    })
-  }
-
-  async checkPassKey(data: any) {
-    // return AuthConfig.verifyPasskey(data)
-  }
-
   async refreshToken(token: string) {
     return new AuthConfig("local").refreshToken(token)
   }
@@ -78,23 +27,6 @@ class AuthService {
         email,
       ])
     return { registered: !!user.length }
-  }
-
-  async createLoginActivity(
-    userId: number | string,
-    data: Record<string, any>
-  ) {
-    await db.table("UserLoginActivity").insert({
-      userId,
-      userAgent: db.raw(`pgp_sym_encrypt(?, ?)`, [
-        data["user-agent"],
-        config.ENCRYPTION_KEY,
-      ]),
-      ipAddress: db.raw(`pgp_sym_encrypt(?, ?)`, [
-        data["x-forwarded-for"],
-        config.ENCRYPTION_KEY,
-      ]),
-    })
   }
 }
 

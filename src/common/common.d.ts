@@ -26,18 +26,11 @@ export interface User {
   id: string
   email: string
   verified: Boolean
-  resihubUserId: string
-  buildingForumId: string
-  communityForumId: string
-  buildingId: string
-  neighbourhoodId: string
-  councilId: string
 }
 
 export interface Business {
   id: string
   email: string
-  resihubBusinessId: string
 }
 
 export interface OnBoarding {

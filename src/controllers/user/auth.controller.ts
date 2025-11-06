@@ -31,46 +31,6 @@ class AuthController {
     }
   }
 
-  async checkPassKey(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await users.authService.checkPassKey(req.body)
-
-      return res.status(200).json({
-        success: true,
-        message: "Verification successful",
-        data,
-      })
-    } catch (e: any) {
-      return next(createError(e))
-    }
-  }
-
-  async validateOTP(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await users.authService.verifyOTP(req.body)
-      return res.status(200).json({
-        success: true,
-        message: "OTP validated successfully",
-        data,
-      })
-    } catch (e: any) {
-      //   console.log(e)
-      return next(createError(e))
-    }
-  }
-
-  async getOTP(req: Request, res: Response, next: NextFunction) {
-    try {
-      await users.authService.generateOTP(req.body.email)
-      return res.status(200).json({
-        success: true,
-        message: "OTP sent successfully",
-      })
-    } catch (e: any) {
-      return next(createError(e))
-    }
-  }
-
   async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await users.authService.refreshToken(req.body.token)

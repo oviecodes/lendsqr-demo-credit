@@ -31,6 +31,10 @@ export const checkUserWallet = async (
       }
     }
 
+    if (req.body.type && req.body.type.toLowerCase() === "withdrawal") {
+      if (!req.body.bankAccount) throw new Error()
+    }
+
     const userWallet = await wallet.walletService.checkUserWallet({
       userId: req.body.userId,
       walletId:

@@ -179,7 +179,7 @@ Notes:
 - `src/services/**` → business logic and DB interactions
 - `src/middleware/**` → auth, validation, checks, converters
 - `src/connectors/knex.connector.ts` → Knex instance (per `NODE_ENV`)
-- `migrations/**` → Knex migrations (TS, compiled to `dist/migrations`)
+- `migrations/**` → Knex migrations
 
 ## Testing
 
